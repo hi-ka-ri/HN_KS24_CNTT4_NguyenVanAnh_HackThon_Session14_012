@@ -10,18 +10,24 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface CarRepository extends JpaRepository<Car, Long> {
+
     Page<Car> findAllByDeletedFalse(Pageable pageable);
 
     Optional<Car> findByIdAndDeletedFalse(Long id);
 
-    boolean existsByModel(String model);
+    boolean existsByModelAndDeletedFalse(String model);
 
-    // Tìm kiếm theo model hoặc brand, kết hợp phân trang, bỏ qua bản đã xóa
-    @Query("SELECT m FROM Car m WHERE m.is_delete = false " +
-            "AND (:name IS NULL OR LOWER(m.model) LIKE LOWER(CONCAT('%', :name, '%'))) " +
-            "AND (:manufacturer IS NULL OR LOWER(m.brand) LIKE LOWER(CONCAT('%', :manufacturer, '%')))")
+    boolean existsByModelAndDeletedFalseAndIdNot(String model, Long id);
+
+    @Query("""
+            SELECT c FROM Car c
+            WHERE c.deleted = false
+            AND (:model IS NULL OR LOWER(c.model) LIKE LOWER(CONCAT('%', :model, '%')))
+            AND (:brand IS NULL OR LOWER(c.brand) LIKE LOWER(CONCAT('%', :brand, '%')))
+            """)
     Page<Car> searchByModelOrBrand(
-            @Param("Model") String model,
-            @Param("Brand") String brand,
-            Pageable pageable);
+            @Param("model") String model,
+            @Param("brand") String brand,
+            Pageable pageable
+    );
 }
